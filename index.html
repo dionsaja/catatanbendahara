@@ -137,7 +137,7 @@
   <!-- HALAMAN DASHBOARD -->
   <div id="dashboard-view" class="hidden w-full h-full flex bg-[#f0f2f5]">
     
-    <!-- SIDEBAR (Baru - Sesuai Referensi) -->
+    <!-- SIDEBAR -->
     <aside class="w-20 bg-white border-r border-gray-200 flex flex-col items-center py-6 z-20 print:hidden shrink-0 shadow-sm">
         <!-- Logo/Icon App -->
         <div class="w-12 h-12 bg-rose-500 rounded-xl flex items-center justify-center text-white shadow-md mb-8">
@@ -167,12 +167,10 @@
     <!-- MAIN CONTENT AREA -->
     <main id="main-content" class="flex-1 flex flex-col h-full overflow-y-auto overflow-x-hidden p-4 md:p-8 print:p-0">
       
-      <!-- HEADER DASHBOARD (Gaya Gelap dengan Aksen Pink) -->
+      <!-- HEADER DASHBOARD -->
       <div class="bg-[#242424] rounded-2xl p-5 md:p-6 mb-6 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 shadow-xl print:hidden text-white relative overflow-hidden">
-        <!-- Dekorasi Background -->
         <div class="absolute top-0 right-0 w-64 h-64 bg-rose-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 -mr-20 -mt-20 pointer-events-none"></div>
 
-        <!-- Title Section -->
         <div class="flex items-center gap-4 relative z-10 w-full min-w-0">
             <div class="p-3 bg-white/10 rounded-xl border border-white/10 backdrop-blur-sm hidden sm:block shrink-0">
                 <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path></svg>
@@ -183,20 +181,17 @@
             </div>
         </div>
 
-        <!-- Filter Buttons (Gaya Pink) -->
         <div class="flex flex-wrap items-center gap-3 relative z-10 w-full xl:w-auto bg-white/5 p-2 rounded-xl border border-white/10 shrink-0">
           <span class="text-sm font-semibold text-gray-300 pl-2">Filter Kegiatan:</span>
           <select id="filter-kegiatan" onchange="handleFilterChange()" class="select-pink bg-rose-500 hover:bg-rose-600 text-white border-none rounded-lg px-4 py-2 text-sm font-bold cursor-pointer transition shadow-lg w-full sm:w-auto focus:ring-2 focus:ring-white/50 outline-none">
             <option value="ALL" class="bg-gray-800 text-white">Semua Data</option>
-            <optgroup id="filter-options-group" label="Pilih Kegiatan Spesifik:" class="bg-gray-800 text-gray-300">
-              <!-- Options populated via JS -->
-            </optgroup>
+            <optgroup id="filter-options-group" label="Pilih Kegiatan Spesifik:" class="bg-gray-800 text-gray-300"></optgroup>
             <option value="NEW" class="bg-white text-rose-600 font-bold border-t">+ Buat Kegiatan Baru...</option>
           </select>
         </div>
       </div>
 
-      <!-- SUMMARY CARDS (Putih Bersih, Teks Tengah) -->
+      <!-- SUMMARY CARDS -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 text-center print:shadow-none hover:shadow-md transition">
           <p class="text-sm font-bold text-gray-800 uppercase tracking-wider mb-2">Total Pemasukan</p>
@@ -281,7 +276,6 @@
                   <div class="w-2 h-6 bg-rose-500 rounded-full"></div>
                   <h3 id="laporan-title" class="text-lg font-extrabold text-gray-900">Detail Laporan Transaksi</h3>
               </div>
-              <!-- Tombol Cetak dipindah ke dalam card tabel -->
               <button onclick="window.print()" class="print:hidden text-gray-700 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg flex items-center gap-2 transition text-sm font-bold">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                 Print / PDF
@@ -315,10 +309,9 @@
 
   <!-- JAVASCRIPT -->
   <script>
-    // ⚠️ PENTING: Ganti URL di bawah ini dengan Web App URL Google Apps Script Anda (dari Langkah 1)
+    // ⚠️ PENTING: Ganti URL di bawah ini dengan Web App URL Google Apps Script Anda
     const GAS_URL = "https://script.google.com/macros/s/AKfycbyhCmDSXQiGdoSDLb4Yllcr0jKX6OsHhEfMm342zHvGPF2vowphav51Y1txqcW-Lzik/exec"; 
 
-    // Fungsi komunikasi API (Bypass CORS preflight dengan text/plain)
     const gasFetch = async (payload) => {
       if (GAS_URL === "MASUKKAN_URL_WEB_APP_GAS_ANDA_DISINI" || !GAS_URL) {
          throw new Error("Pastikan Anda sudah mengisi GAS_URL di index.html dengan URL Web App Anda!");
@@ -337,7 +330,6 @@
       }
     };
 
-    // MOCK API DIGANTI DENGAN FETCH API KE VERCEL
     const API = {
       login: (u, p) => gasFetch({ action: 'verifyLogin', username: u, password: p }),
       getTransactions: () => gasFetch({ action: 'getTransactions' }),
@@ -347,12 +339,24 @@
       uploadFile: (b64, name, type) => gasFetch({ action: 'uploadFile', base64Data: b64, fileName: name, mimeType: type })
     };
 
-    // UTILS
     const fileToBase64 = file => new Promise((resolve, reject) => {
       const reader = new FileReader(); reader.readAsDataURL(file);
       reader.onload = () => resolve(reader.result); reader.onerror = e => reject(e);
     });
     const formatRp = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+    
+    // Fungsi ekstraksi ID Drive untuk Direct View (Bypass Viewer UI)
+    const getDirectLink = (url) => {
+      if (!url) return url;
+      // Memotong ID dari URL seperti https://drive.google.com/file/d/XYZ123/view
+      const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      if (match && match[1]) {
+        // Format uc?export=view akan memaksa browser merender file/gambar secara langsung
+        return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+      }
+      return url;
+    };
+
     const showToast = (msg, isErr = false) => {
       const t = document.getElementById('toast');
       document.getElementById('toast-message').innerText = msg;
@@ -362,7 +366,6 @@
       setTimeout(() => { t.classList.add('translate-y-[-100px]', 'opacity-0'); t.classList.remove('translate-y-0', 'opacity-100'); }, 3000);
     };
 
-    // APP STATE
     let appData = [];
 
     window.onload = () => {
@@ -458,7 +461,11 @@
           
           let buktiContent = '<span class="text-gray-300">-</span>';
           if (row.buktiUrl) {
-             const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(row.buktiUrl)}`;
+             // 1. Dapatkan Direct Link
+             const directUrl = getDirectLink(row.buktiUrl);
+             // 2. Buat QR Code menggunakan Direct Link tersebut
+             const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(directUrl)}`;
+             
              buktiContent = `
                 <div class="link-screen-only">
                     <a href="${row.buktiUrl}" target="_blank" class="text-rose-500 hover:text-rose-700 font-semibold text-sm underline underline-offset-2">Lihat</a>
