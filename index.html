@@ -351,8 +351,8 @@
       // Memotong ID dari URL seperti https://drive.google.com/file/d/XYZ123/view
       const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
       if (match && match[1]) {
-        // Format uc?export=view akan memaksa browser merender file/gambar secara langsung
-        return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+        // Gunakan endpoint 'thumbnail' agar Google merender gambar murni tanpa UI Drive sama sekali
+        return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
       }
       return url;
     };
