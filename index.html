@@ -334,8 +334,25 @@
          const loading = document.getElementById('qr-loading');
 
          viewer.classList.replace('hidden', 'flex');
+         
+         // Jika gambar berhasil dimuat, sembunyikan tulisan loading
          img.onload = () => loading.classList.add('hidden');
-         img.src = `https://drive.google.com/uc?export=view&id=${viewId}`;
+         
+         // Jika gambar diblokir oleh Google/Browser, tampilkan tombol buka manual
+         img.onerror = () => {
+             loading.classList.remove('animate-pulse');
+             loading.innerHTML = `
+                <div class="text-center">
+                    <p class="mb-4">Gambar diblokir oleh sistem keamanan perangkat.</p>
+                    <a href="https://drive.google.com/file/d/${viewId}/view" target="_blank" class="bg-purple-600 hover:bg-purple-700 px-6 py-2.5 rounded-xl text-white font-bold transition shadow-lg inline-block">
+                        Buka Manual di Google Drive
+                    </a>
+                </div>
+             `;
+         };
+         
+         // Gunakan endpoint thumbnail khusus (lebih stabil untuk hotlink)
+         img.src = `https://drive.google.com/thumbnail?id=${viewId}&sz=w1000`;
          return; 
       }
 
