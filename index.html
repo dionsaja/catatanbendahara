@@ -90,6 +90,10 @@
             <input type="date" id="edit-tanggal" class="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50 focus:bg-white focus:border-purple-500 outline-none transition" required>
           </div>
           <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Kegiatan</label>
+            <input type="text" id="edit-kegiatan" placeholder="Nama Kegiatan" class="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50 focus:bg-white focus:border-purple-500 outline-none transition" required>
+          </div>
+          <div class="mb-4">
             <label class="block text-sm font-semibold text-gray-700 mb-1">Tipe Transaksi</label>
             <select id="edit-tipe" class="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50 focus:bg-white focus:border-purple-500 outline-none transition" required>
               <option value="Pemasukan">Pemasukan</option>
@@ -173,6 +177,10 @@
                 <input type="date" id="input-tanggal" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 outline-none text-sm focus:border-purple-500 transition" required>
               </div>
               <div class="mb-4">
+                <label class="block text-xs font-bold text-gray-700 mb-1.5">Kegiatan</label>
+                <input type="text" id="input-kegiatan" placeholder="Contoh: Rapat Rutin" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 outline-none text-sm focus:border-purple-500 transition" required>
+              </div>
+              <div class="mb-4">
                 <label class="block text-xs font-bold text-gray-700 mb-1.5">Tipe Transaksi</label>
                 <select id="input-tipe" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 outline-none text-sm select-custom focus:border-purple-500 transition" required>
                   <option value="Pemasukan">Pemasukan</option>
@@ -213,9 +221,19 @@
           
           <!-- HEADER LAPORAN & TOMBOL CETAK -->
           <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 relative">
-              <h2 id="print-title" class="text-xl sm:text-2xl font-bold uppercase tracking-widest text-purple-900 border-b-2 border-purple-900 pb-2 inline-block">LAPORAN TRANSAKSI KEUANGAN</h2>
+              <div class="flex flex-col items-center sm:items-start gap-3">
+                  <h2 id="print-title" class="text-xl sm:text-2xl font-bold uppercase tracking-widest text-purple-900 border-b-2 border-purple-900 pb-2 inline-block text-center sm:text-left">LAPORAN TRANSAKSI KEUANGAN</h2>
+                  
+                  <!-- Filter Kegiatan -->
+                  <div class="print:hidden flex items-center gap-2">
+                      <label class="text-sm font-bold text-gray-600">Filter Kegiatan:</label>
+                      <select id="filter-kegiatan" onchange="renderData()" class="border border-gray-300 rounded-lg px-3 py-1.5 bg-gray-50 outline-none text-sm select-custom focus:border-purple-500 transition min-w-[200px]">
+                          <option value="">Semua Kegiatan</option>
+                      </select>
+                  </div>
+              </div>
               
-              <button onclick="window.print()" class="bg-gray-800 hover:bg-gray-900 text-white px-5 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 print:hidden shadow-md transition">
+              <button onclick="window.print()" class="bg-gray-800 hover:bg-gray-900 text-white px-5 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 print:hidden shadow-md transition shrink-0">
                 🖨️ Cetak PDF / Kertas
               </button>
           </div>
@@ -300,7 +318,7 @@
   <!-- JAVASCRIPT -->
   <script>
     // ⚠️ PASTIKAN URL GAS INI SUDAH TERISI
-    const GAS_URL = "MASUKKAN_URL_WEB_APP_GAS_ANDA_DISINI"; 
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyhCmDSXQiGdoSDLb4Yllcr0jKX6OsHhEfMm342zHvGPF2vowphav51Y1txqcW-Lzik/exec"; 
 
     window.onload = () => {
       const today = new Date();
@@ -428,15 +446,40 @@
     function renderData() {
       const tbody = document.getElementById('table-body');
       
+      const filterSelect = document.getElementById('filter-kegiatan');
+      const currentFilter = filterSelect ? filterSelect.value : "";
+      
+      // Kumpulkan opsi filter unik (Hanya jika datanya ada)
+      if (filterSelect) {
+          const uniqueKegiatan = [...new Set(appData.map(item => item.kegiatan).filter(k => k && k !== '-'))];
+          let optionsHTML = '<option value="">Semua Kegiatan</option>';
+          uniqueKegiatan.forEach(k => {
+              optionsHTML += `<option value="${k}" ${k === currentFilter ? 'selected' : ''}>${k}</option>`;
+          });
+          filterSelect.innerHTML = optionsHTML;
+      }
+
+      // Update Judul Laporan berdasarkan filter
+      const printTitle = document.getElementById('print-title');
+      if (printTitle) {
+          printTitle.innerText = currentFilter ? `LAPORAN TRANSAKSI KEUANGAN - ${currentFilter.toUpperCase()}` : `LAPORAN TRANSAKSI KEUANGAN`;
+      }
+      
+      // Saring (Filter) data sesuai kegiatan
+      let filteredData = appData;
+      if (currentFilter) {
+          filteredData = appData.filter(item => item.kegiatan === currentFilter);
+      }
+      
       let totalIn = 0, totalOut = 0, currentSaldo = 0;
       tbody.innerHTML = '';
       
-      if (appData.length === 0) {
+      if (filteredData.length === 0) {
         tbody.innerHTML = `<tr><td colspan="7" class="text-center py-12 text-gray-400 font-medium">Belum ada transaksi yang dicatat.</td></tr>`;
       } else {
         
-        // Membalik urutan data (agar dihitung & ditampilkan dari yang TERLAMA ke TERBARU)
-        let chronologicalData = [...appData].reverse(); 
+        // Membalik urutan data yang difilter
+        let chronologicalData = [...filteredData].reverse(); 
         
         chronologicalData.forEach(row => {
             const nominalValue = Number(row.nominal);
@@ -495,6 +538,7 @@
     async function handleAddTransaction(e) {
       e.preventDefault();
       const btn = document.getElementById('btn-simpan'), t = document.getElementById('input-tanggal').value;
+      const k = document.getElementById('input-kegiatan').value;
       const tp = document.getElementById('input-tipe').value;
       const n = document.getElementById('input-nominal').value, ket = document.getElementById('input-keterangan').value;
       
@@ -510,11 +554,11 @@
           btn.innerText = 'Upload...'; bUrl = await API.uploadFile(await fileToBase64(file), file.name, file.type);
         }
         btn.innerText = 'Menyimpan...';
-        // Parameter kegiatan dikosongkan (diwakili '-') agar struktur database backend tidak error
-        const res = await API.addTransaction(t, "-", tp, ket, n, bUrl);
+        
+        const res = await API.addTransaction(t, k, tp, ket, n, bUrl);
         if (res.success) {
           showToast('Data Transaksi Tersimpan!'); 
-          document.getElementById('input-nominal').value = ''; document.getElementById('input-keterangan').value = ''; 
+          document.getElementById('input-kegiatan').value = ''; document.getElementById('input-nominal').value = ''; document.getElementById('input-keterangan').value = ''; 
           document.getElementById('input-bukti').value = ''; document.getElementById('input-bukti-kamera').value = '';
           document.getElementById('nama-file-kamera').innerText = '';
           await loadData();
@@ -526,6 +570,7 @@
     function openEditModal(id) {
       const d = appData.find(x => x.id == id); if (!d) return;
       document.getElementById('edit-id').value = d.id; document.getElementById('edit-tanggal').value = d.tanggal;
+      document.getElementById('edit-kegiatan').value = d.kegiatan;
       document.getElementById('edit-tipe').value = d.tipe;
       document.getElementById('edit-nominal').value = d.nominal; document.getElementById('edit-keterangan').value = d.keterangan;
       document.getElementById('edit-bukti').value = ''; document.getElementById('edit-bukti-kamera').value = '';
@@ -538,6 +583,7 @@
       e.preventDefault();
       const btn = document.getElementById('btn-update'), id = document.getElementById('edit-id').value;
       const t = document.getElementById('edit-tanggal').value;
+      const k = document.getElementById('edit-kegiatan').value;
       const tp = document.getElementById('edit-tipe').value, n = document.getElementById('edit-nominal').value;
       const ket = document.getElementById('edit-keterangan').value;
       const file1 = document.getElementById('edit-bukti').files[0], file2 = document.getElementById('edit-bukti-kamera').files[0];
@@ -550,7 +596,7 @@
           if (file.size > 3*1024*1024) throw new Error("Maksimal 3MB");
           bUrl = await API.uploadFile(await fileToBase64(file), file.name, file.type);
         }
-        const res = await API.updateTransaction(id, t, "-", tp, ket, n, bUrl);
+        const res = await API.updateTransaction(id, t, k, tp, ket, n, bUrl);
         if (res.success) { showToast('Data Berhasil Diperbarui!'); closeEditModal(); await loadData(); }
         else throw new Error(res.message);
       } catch (err) { showToast(err.message, true); }
