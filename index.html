@@ -211,6 +211,30 @@
               </button>
             </form>
         </div>
+
+        <!-- PENGATURAN PENANDATANGAN (CETAK) -->
+        <div class="mt-8 border-t border-gray-200 pt-6">
+            <h3 class="text-sm font-bold text-gray-500 mb-4 uppercase tracking-wider">Pengaturan Tanda Tangan</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1.5">Nama Ketua Kegiatan</label>
+                    <input type="text" id="setting-ketua-nama" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 outline-none text-sm focus:border-purple-500 transition" placeholder="Nama Ketua" oninput="updateSignatures()">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1.5">NIP Ketua</label>
+                    <input type="text" id="setting-ketua-nip" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 outline-none text-sm focus:border-purple-500 transition" placeholder="Opsional" oninput="updateSignatures()">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1.5">Nama Bendahara</label>
+                    <input type="text" id="setting-bendahara-nama" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 outline-none text-sm focus:border-purple-500 transition" placeholder="Nama Bendahara" oninput="updateSignatures()">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1.5">NIP Bendahara</label>
+                    <input type="text" id="setting-bendahara-nip" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 outline-none text-sm focus:border-purple-500 transition" placeholder="Opsional" oninput="updateSignatures()">
+                </div>
+            </div>
+        </div>
+
     </aside>
 
     <!-- AREA KANAN (DOKUMEN LAPORAN) -->
@@ -298,15 +322,26 @@
                   </table>
               </div>
 
-              <!-- Tanda Tangan -->
-              <div class="flex justify-between items-start w-full px-2 sm:px-12 text-sm sm:text-base">
-                  <div class="text-center">
-                      <p class="mb-24">Mengetahui,<br>Ketua Kegiatan</p>
-                      <p class="font-bold underline underline-offset-4">Nama Bos</p>
+              <!-- Tanda Tangan (Bisa Diklik & Diedit Langsung) -->
+              <div class="relative w-full mt-4">
+                  <div class="print:hidden absolute -top-8 left-0 right-0 text-center text-xs font-bold text-purple-600 animate-pulse bg-purple-50 py-1.5 rounded-lg border border-purple-200">
+                      💡 Tip: Klik langsung pada teks Nama & NIP di bawah ini untuk mengeditnya. Data tersimpan sesuai Filter Kegiatan.
                   </div>
-                  <div class="text-center">
-                      <p class="mb-24">Surabaya, <span id="tgl-cetak"></span><br>Bendahara</p>
-                      <p class="font-bold underline underline-offset-4">Alfisyah Hadi, S.Pd.</p>
+                  <div class="flex justify-between items-start w-full px-2 sm:px-12 text-sm sm:text-base mt-8">
+                      <div class="text-center">
+                          <p class="mb-24">Mengetahui,<br>Ketua Kegiatan</p>
+                          <div class="flex flex-col items-center">
+                              <p id="ttd-ketua-nama" contenteditable="true" onblur="saveSignature()" class="font-bold underline underline-offset-4 outline-none border-b border-transparent focus:border-purple-500 hover:bg-purple-50 print:hover:bg-transparent px-2 min-w-[150px] transition-colors cursor-text">Nama Ketua</p>
+                              <p id="ttd-ketua-nip" contenteditable="true" onblur="saveSignature()" class="outline-none border-b border-transparent focus:border-purple-500 hover:bg-purple-50 print:hover:bg-transparent px-2 min-w-[150px] mt-1 transition-colors cursor-text">NIP. -</p>
+                          </div>
+                      </div>
+                      <div class="text-center">
+                          <p class="mb-24">Surabaya, <span id="tgl-cetak"></span><br>Bendahara</p>
+                          <div class="flex flex-col items-center">
+                              <p id="ttd-bendahara-nama" contenteditable="true" onblur="saveSignature()" class="font-bold underline underline-offset-4 outline-none border-b border-transparent focus:border-purple-500 hover:bg-purple-50 print:hover:bg-transparent px-2 min-w-[150px] transition-colors cursor-text">Alfisyah Hadi, S.Pd.</p>
+                              <p id="ttd-bendahara-nip" contenteditable="true" onblur="saveSignature()" class="outline-none border-b border-transparent focus:border-purple-500 hover:bg-purple-50 print:hover:bg-transparent px-2 min-w-[150px] mt-1 transition-colors cursor-text">NIP. -</p>
+                          </div>
+                      </div>
                   </div>
               </div>
 
@@ -424,6 +459,36 @@
 
     let appData = [];
 
+    // --- FUNGSI UPDATE & SIMPAN TANDA TANGAN ---
+    function updateSignatures() {
+        const kn = document.getElementById('setting-ketua-nama').value || 'Nama Bos';
+        const knip = document.getElementById('setting-ketua-nip').value;
+        const bn = document.getElementById('setting-bendahara-nama').value || 'Alfisyah Hadi, S.Pd.';
+        const bnip = document.getElementById('setting-bendahara-nip').value;
+
+        document.getElementById('print-ketua-nama').innerText = kn;
+        document.getElementById('print-ketua-nip').innerText = knip ? `NIP. ${knip}` : '';
+        
+        document.getElementById('print-bendahara-nama').innerText = bn;
+        document.getElementById('print-bendahara-nip').innerText = bnip ? `NIP. ${bnip}` : '';
+
+        // Simpan ke memori browser agar tidak hilang saat di-refresh
+        localStorage.setItem('pengaturanTtd', JSON.stringify({kn, knip, bn, bnip}));
+    }
+
+    function loadSignatures() {
+        try {
+            const saved = JSON.parse(localStorage.getItem('pengaturanTtd'));
+            if (saved) {
+                if (saved.kn && saved.kn !== 'Nama Bos') document.getElementById('setting-ketua-nama').value = saved.kn;
+                if (saved.knip) document.getElementById('setting-ketua-nip').value = saved.knip;
+                if (saved.bn && saved.bn !== 'Alfisyah Hadi, S.Pd.') document.getElementById('setting-bendahara-nama').value = saved.bn;
+                if (saved.bnip) document.getElementById('setting-bendahara-nip').value = saved.bnip;
+                updateSignatures();
+            }
+        } catch(e) {}
+    }
+
     async function handleLogin(e) {
       e.preventDefault();
       const u = document.getElementById('username').value, p = document.getElementById('password').value, btn = document.getElementById('btn-login');
@@ -448,6 +513,7 @@
       document.getElementById('dashboard-view').classList.remove('hidden');
       document.getElementById('dashboard-view').classList.add('flex');
       document.getElementById('input-tanggal').valueAsDate = new Date();
+      loadSignatures(); // Muat nama dan NIP yang tersimpan
       loadData();
     }
 
@@ -550,6 +616,42 @@
       document.getElementById('summary-in').innerText = formatRp(totalIn);
       document.getElementById('summary-out').innerText = formatRp(totalOut);
       document.getElementById('summary-saldo').innerText = formatRp(currentSaldo);
+
+      // Muat Tanda Tangan sesuai filter kegiatan
+      loadSignature();
+    }
+
+    function getKegiatanKey() {
+      const filter = document.getElementById('filter-kegiatan');
+      return filter && filter.value ? filter.value : 'SEMUA_KEGIATAN';
+    }
+
+    function loadSignature() {
+      const key = getKegiatanKey();
+      const saved = JSON.parse(localStorage.getItem('signature_data')) || {};
+      const data = saved[key] || { 
+          ketuaNama: 'Nama Ketua', ketuaNip: 'NIP. -', 
+          bendaharaNama: 'Alfisyah Hadi, S.Pd.', bendaharaNip: 'NIP. -' 
+      };
+      
+      document.getElementById('ttd-ketua-nama').innerText = data.ketuaNama;
+      document.getElementById('ttd-ketua-nip').innerText = data.ketuaNip;
+      document.getElementById('ttd-bendahara-nama').innerText = data.bendaharaNama;
+      document.getElementById('ttd-bendahara-nip').innerText = data.bendaharaNip;
+    }
+
+    function saveSignature() {
+      const key = getKegiatanKey();
+      const saved = JSON.parse(localStorage.getItem('signature_data')) || {};
+      
+      saved[key] = {
+          ketuaNama: document.getElementById('ttd-ketua-nama').innerText,
+          ketuaNip: document.getElementById('ttd-ketua-nip').innerText,
+          bendaharaNama: document.getElementById('ttd-bendahara-nama').innerText,
+          bendaharaNip: document.getElementById('ttd-bendahara-nip').innerText
+      };
+      
+      localStorage.setItem('signature_data', JSON.stringify(saved));
     }
 
     async function handleAddTransaction(e) {
