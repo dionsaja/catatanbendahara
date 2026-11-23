@@ -91,7 +91,11 @@
           </div>
           <div class="mb-4">
             <label class="block text-sm font-semibold text-gray-700 mb-1">Kegiatan</label>
-            <input type="text" id="edit-kegiatan" placeholder="Nama Kegiatan" class="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50 focus:bg-white focus:border-purple-500 outline-none transition" required>
+            <select id="edit-kegiatan-select" onchange="toggleKegiatanBaru('edit')" class="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50 focus:bg-white focus:border-purple-500 outline-none text-sm select-custom transition" required>
+              <option value="">-- Pilih Kegiatan --</option>
+              <option value="__BARU__">+ Tambah Kegiatan Baru...</option>
+            </select>
+            <input type="text" id="edit-kegiatan-baru" placeholder="Ketik nama kegiatan baru..." class="hidden mt-2 w-full border border-purple-300 rounded-lg px-4 py-2 bg-white focus:border-purple-500 outline-none text-sm transition">
           </div>
           <div class="mb-4">
             <label class="block text-sm font-semibold text-gray-700 mb-1">Tipe Transaksi</label>
@@ -178,7 +182,11 @@
               </div>
               <div class="mb-4">
                 <label class="block text-xs font-bold text-gray-700 mb-1.5">Kegiatan</label>
-                <input type="text" id="input-kegiatan" placeholder="Contoh: Rapat Rutin" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 outline-none text-sm focus:border-purple-500 transition" required>
+                <select id="input-kegiatan-select" onchange="toggleKegiatanBaru('input')" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 outline-none text-sm select-custom focus:border-purple-500 transition" required>
+                  <option value="">-- Pilih Kegiatan --</option>
+                  <option value="__BARU__">+ Tambah Kegiatan Baru...</option>
+                </select>
+                <input type="text" id="input-kegiatan-baru" placeholder="Ketik nama kegiatan baru..." class="hidden mt-2 w-full border border-purple-300 rounded-lg px-3 py-2 bg-white outline-none text-sm focus:border-purple-500 transition">
               </div>
               <div class="mb-4">
                 <label class="block text-xs font-bold text-gray-700 mb-1.5">Tipe Transaksi</label>
@@ -532,15 +540,23 @@
       const filterSelect = document.getElementById('filter-kegiatan');
       const currentFilter = filterSelect ? filterSelect.value : "";
       
-      // Kumpulkan opsi filter unik (Hanya jika datanya ada)
+      // Kumpulkan daftar kegiatan unik dari database
+      const uniqueKegiatan = [...new Set(appData.map(item => item.kegiatan).filter(k => k && k !== '-'))];
+
+      // Update opsi Filter Kegiatan
       if (filterSelect) {
-          const uniqueKegiatan = [...new Set(appData.map(item => item.kegiatan).filter(k => k && k !== '-'))];
-          let optionsHTML = '<option value="">Semua Kegiatan</option>';
+          filterSelect.innerHTML = '<option value="">Semua Kegiatan</option>';
           uniqueKegiatan.forEach(k => {
-              optionsHTML += `<option value="${k}" ${k === currentFilter ? 'selected' : ''}>${k}</option>`;
+              const opt = document.createElement('option');
+              opt.value = k;
+              opt.textContent = k;
+              if (k === currentFilter) opt.selected = true;
+              filterSelect.appendChild(opt);
           });
-          filterSelect.innerHTML = optionsHTML;
       }
+
+      // Update opsi Dropdown Kegiatan pada Form Input & Modal Edit
+      populateKegiatanDropdowns(uniqueKegiatan);
 
       // Update Judul Laporan berdasarkan filter
       const printTitle = document.getElementById('print-title');
@@ -654,12 +670,74 @@
       localStorage.setItem('signature_data', JSON.stringify(saved));
     }
 
+    // --- FUNGSI DROPDOWN KEGIATAN OTOMATIS ---
+    function populateKegiatanDropdowns(uniqueKegiatan) {
+      ['input', 'edit'].forEach(prefix => {
+        const select = document.getElementById(`${prefix}-kegiatan-select`);
+        if (!select) return;
+
+        const prevVal = select.value;
+        select.innerHTML = '';
+
+        const defaultOpt = document.createElement('option');
+        defaultOpt.value = '';
+        defaultOpt.textContent = '-- Pilih Kegiatan --';
+        select.appendChild(defaultOpt);
+
+        uniqueKegiatan.forEach(k => {
+          const opt = document.createElement('option');
+          opt.value = k;
+          opt.textContent = k;
+          select.appendChild(opt);
+        });
+
+        const newOpt = document.createElement('option');
+        newOpt.value = '__BARU__';
+        newOpt.textContent = '+ Tambah Kegiatan Baru...';
+        select.appendChild(newOpt);
+
+        // Pertahankan pilihan sebelumnya jika masih valid
+        if (prevVal && (uniqueKegiatan.includes(prevVal) || prevVal === '__BARU__')) {
+          select.value = prevVal;
+        } else if (prefix === 'input' && uniqueKegiatan.length === 0) {
+          // Jika belum ada data kegiatan sama sekali, langsung buka input teks baru
+          select.value = '__BARU__';
+          toggleKegiatanBaru('input');
+        }
+      });
+    }
+
+    function toggleKegiatanBaru(prefix) {
+      const select = document.getElementById(`${prefix}-kegiatan-select`);
+      const inputBaru = document.getElementById(`${prefix}-kegiatan-baru`);
+      if (select.value === '__BARU__') {
+        inputBaru.classList.remove('hidden');
+        inputBaru.required = true;
+        inputBaru.focus();
+      } else {
+        inputBaru.classList.add('hidden');
+        inputBaru.required = false;
+        inputBaru.value = '';
+      }
+    }
+
+    function getKegiatanValue(prefix) {
+      const select = document.getElementById(`${prefix}-kegiatan-select`);
+      const inputBaru = document.getElementById(`${prefix}-kegiatan-baru`);
+      return select.value === '__BARU__' ? inputBaru.value.trim() : select.value;
+    }
+
     async function handleAddTransaction(e) {
       e.preventDefault();
       const btn = document.getElementById('btn-simpan'), t = document.getElementById('input-tanggal').value;
-      const k = document.getElementById('input-kegiatan').value;
+      const k = getKegiatanValue('input');
       const tp = document.getElementById('input-tipe').value;
       const n = document.getElementById('input-nominal').value, ket = document.getElementById('input-keterangan').value;
+
+      if (!k) {
+        showToast('Nama kegiatan wajib diisi!', true);
+        return;
+      }
       
       const file1 = document.getElementById('input-bukti').files[0];
       const file2 = document.getElementById('input-bukti-kamera').files[0];
@@ -677,10 +755,14 @@
         const res = await API.addTransaction(t, k, tp, ket, n, bUrl);
         if (res.success) {
           showToast('Data Transaksi Tersimpan!'); 
-          document.getElementById('input-kegiatan').value = ''; document.getElementById('input-nominal').value = ''; document.getElementById('input-keterangan').value = ''; 
+          document.getElementById('input-nominal').value = ''; document.getElementById('input-keterangan').value = ''; 
           document.getElementById('input-bukti').value = ''; document.getElementById('input-bukti-kamera').value = '';
           document.getElementById('nama-file-kamera').innerText = '';
+          
+          // Muat ulang data lalu otomatis pilih kembali kegiatan terakhir agar tidak bolak-balik memilih
           await loadData();
+          document.getElementById('input-kegiatan-select').value = k;
+          toggleKegiatanBaru('input');
         } else throw new Error(res.message);
       } catch (err) { showToast(err.message, true); }
       finally { btn.innerText = 'Simpan Data'; btn.disabled = false; }
@@ -689,7 +771,23 @@
     function openEditModal(id) {
       const d = appData.find(x => x.id == id); if (!d) return;
       document.getElementById('edit-id').value = d.id; document.getElementById('edit-tanggal').value = d.tanggal;
-      document.getElementById('edit-kegiatan').value = d.kegiatan;
+      
+      const editSelect = document.getElementById('edit-kegiatan-select');
+      const editBaru = document.getElementById('edit-kegiatan-baru');
+      const optionExists = Array.from(editSelect.options).some(opt => opt.value === d.kegiatan);
+      
+      if (optionExists && d.kegiatan) {
+        editSelect.value = d.kegiatan;
+        editBaru.classList.add('hidden');
+        editBaru.required = false;
+        editBaru.value = '';
+      } else {
+        editSelect.value = '__BARU__';
+        editBaru.classList.remove('hidden');
+        editBaru.required = true;
+        editBaru.value = d.kegiatan && d.kegiatan !== '-' ? d.kegiatan : '';
+      }
+
       document.getElementById('edit-tipe').value = d.tipe;
       document.getElementById('edit-nominal').value = d.nominal; document.getElementById('edit-keterangan').value = d.keterangan;
       document.getElementById('edit-bukti').value = ''; document.getElementById('edit-bukti-kamera').value = '';
@@ -702,9 +800,15 @@
       e.preventDefault();
       const btn = document.getElementById('btn-update'), id = document.getElementById('edit-id').value;
       const t = document.getElementById('edit-tanggal').value;
-      const k = document.getElementById('edit-kegiatan').value;
+      const k = getKegiatanValue('edit');
       const tp = document.getElementById('edit-tipe').value, n = document.getElementById('edit-nominal').value;
       const ket = document.getElementById('edit-keterangan').value;
+
+      if (!k) {
+        showToast('Nama kegiatan wajib diisi!', true);
+        return;
+      }
+
       const file1 = document.getElementById('edit-bukti').files[0], file2 = document.getElementById('edit-bukti-kamera').files[0];
       const file = file1 || file2;
 
